@@ -23,6 +23,10 @@ python-multipart>=0.0.6
 # Cloud Storage
 cloudinary>=1.36.0
 
+# Product Search (SerpAPI for reverse image search)
+google-search-results>=2.4.2
+
 # Utilities
 python-dotenv>=1.0.0
+
 
