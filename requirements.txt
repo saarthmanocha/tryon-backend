@@ -1,0 +1,26 @@
+# TryOn Backend - Python Dependencies
+
+# Core
+numpy>=1.24.0
+opencv-python>=4.8.0
+
+# MediaPipe for face detection
+mediapipe>=0.10.0
+
+# Image processing
+Pillow>=10.0.0
+rembg>=2.0.50
+
+# HTTP requests (for URL download)
+requests>=2.31.0
+
+# API
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+
+# Cloud Storage
+cloudinary>=1.36.0
+
+# Utilities
+python-dotenv>=1.0.0
