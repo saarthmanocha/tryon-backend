@@ -256,12 +256,23 @@ class IDMVTONService:
 
 # Global API key (set from environment or config)
 _api_key: Optional[str] = None
+# Mock mode flag
+_mock_mode: bool = False
+
+# Mock result image URL (a sample dressed mannequin)
+MOCK_IMAGE_URL = "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=512"
 
 
 def set_api_key(key: str):
     """Set the fal.ai API key."""
     global _api_key
     _api_key = key
+
+
+def set_mock_mode(enabled: bool = True):
+    """Enable or disable mock mode for testing without API credits."""
+    global _mock_mode
+    _mock_mode = enabled
 
 
 def generate_tryon(
@@ -274,6 +285,9 @@ def generate_tryon(
     """
     Generate a try-on image.
     
+    If no API key is set, returns a mock result with a placeholder image.
+    This allows Flutter app development without needing fal.ai credits.
+    
     Args:
         user_id: User identifier
         base_body_path: Path to base body image
@@ -284,12 +298,22 @@ def generate_tryon(
     Returns:
         Dictionary with generation results
     """
-    if not _api_key:
+    tryon_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Mock mode: return placeholder when no API key
+    if not _api_key or _mock_mode:
         return {
-            "success": False,
-            "error": "API key not set. Call set_api_key() first."
+            "success": True,
+            "tryon_image_path": None,
+            "tryon_image_url": MOCK_IMAGE_URL,
+            "tryon_id": f"mock_{tryon_id}",
+            "processed_at": datetime.now().isoformat(),
+            "error": None,
+            "mock": True,  # Flag indicating this is mock data
+            "message": "Mock mode: Using placeholder image. Set FAL_API_KEY for real try-on."
         }
     
+    # Real mode: use fal.ai API
     service = IDMVTONService(api_key=_api_key, output_dir=output_dir)
     result = service.generate_tryon(user_id, base_body_path, garment_path, garment_type)
     return result.to_dict()
