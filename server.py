@@ -22,6 +22,7 @@ from base_body_creator import create_base_body
 from garment_segmenter import segment_garment_from_file, segment_garment_from_url
 from tryon_generator import generate_tryon, set_api_key
 from face_compositor import composite_face, composite_face_and_hair
+from product_search import search_products
 
 
 
@@ -161,6 +162,23 @@ class CompositeRequest(BaseModel):
 
 class SetApiKeyRequest(BaseModel):
     api_key: str
+
+
+class ProductSearchRequest(BaseModel):
+    image_url: str
+    max_results: int = 10
+    country: str = "in"
+    include_global: bool = True
+
+
+class ProductSearchResponse(BaseModel):
+    success: bool
+    query_image: Optional[str] = None
+    products: List[dict] = []
+    total_found: int = 0
+    search_time_ms: Optional[int] = None
+    searched_at: Optional[str] = None
+    error: Optional[str] = None
 
 
 # === Endpoints ===
@@ -452,6 +470,34 @@ async def get_tryon_image(user_id: str, tryon_filename: str):
         raise HTTPException(status_code=404, detail="Try-on image not found")
     
     return FileResponse(tryon_path, media_type="image/png")
+
+
+# === Product Search ===
+
+@app.post("/api/search-products", response_model=ProductSearchResponse)
+async def api_search_products(request: ProductSearchRequest):
+    """
+    Search for products matching a garment image.
+    
+    Uses reverse image search to find similar products across
+    e-commerce platforms with prices and purchase links.
+    
+    Note: Requires SERPAPI_KEY environment variable to be set.
+    """
+    try:
+        result = search_products(
+            image_url=request.image_url,
+            max_results=request.max_results,
+            country=request.country,
+            include_global=request.include_global
+        )
+        return ProductSearchResponse(**result)
+        
+    except Exception as e:
+        return ProductSearchResponse(
+            success=False,
+            error=str(e)
+        )
 
 
 # === Run Server ===
