@@ -18,14 +18,9 @@ from PIL import Image
 from io import BytesIO
 from cloudinary_storage import CloudinaryStorage as StorageService
 
-# Use rembg for background removal (U2-Net based, works well for clothing)
-# For SAM, you'd need: from segment_anything import sam_model_registry, SamPredictor
-try:
-    from rembg import remove
-    REMBG_AVAILABLE = True
-except ImportError:
-    REMBG_AVAILABLE = False
-    print("Warning: rembg not installed. Run: pip install rembg")
+# rembg is imported lazily inside functions to avoid GPU initialization at startup
+# This fixes deployment issues on CPU-only servers like Render
+REMBG_AVAILABLE = None  # Will be set on first use
 
 
 @dataclass
@@ -173,10 +168,13 @@ class GarmentSegmenter:
         """
         Process image: resize, segment, detect type, save.
         """
-        if not REMBG_AVAILABLE:
+        # Lazy import rembg to avoid GPU initialization at startup
+        try:
+            from rembg import remove
+        except ImportError:
             return GarmentSegmentationResult(
                 success=False,
-                error="rembg not installed. Run: pip install rembg"
+                error="rembg not installed. Run: pip install rembg[cpu]"
             )
         
         try:
