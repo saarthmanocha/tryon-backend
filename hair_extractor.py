@@ -141,11 +141,14 @@ class HairExtractor:
             # Clean up hair mask
             hair_mask = self._clean_hair_mask(hair_mask)
             
-            # Check if any hair was detected
-            if np.sum(hair_mask) < 1000:  # Less than 1000 white pixels
+            # Check if any hair was detected (lowered threshold for better sensitivity)
+            hair_pixels = np.sum(hair_mask > 0)
+            print(f"Hair pixels detected: {hair_pixels}")
+            
+            if hair_pixels < 100:  # Lowered from 1000 to be more sensitive
                 return HairExtractionResult(
                     success=False,
-                    error="No significant hair detected in the image"
+                    error=f"No significant hair detected ({hair_pixels} pixels)"
                 )
             
             # Save hair mask
